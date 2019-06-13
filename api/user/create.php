@@ -37,14 +37,16 @@
         CHeck to ensure passwords are equal
     */
 
-    if ($pass != $respass) {
+    if ($pass != $repass) {
         $status["status"] = "error";
         $status["message"] = ENUMS::PASS_NOT_EQUAL;
 
         die(json_encode($status));
     }
 
-    $link = new Database();
+    $db = new Database();
+
+    $link = $db->getLink();
 
     if (!$link) {
         $status["status"] = "error";
@@ -53,18 +55,12 @@
         die(json_encode($status));
     }
 
-
-
-    // ensure user doesn't exist
-    // passowrd hash
-    // return status ok
-
     $email = htmlspecialchars(strip_tags($email));
     $fname = htmlspecialchars(strip_tags($fname));
     $lname = htmlspecialchars(strip_tags($lname));
     $pass  = password_hash(htmlspecialchars(strip_tags($pass)), PASSWORD_BCRYPT);
 
-    $sql = "INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (:fname, :lname, :email, :pass) OUTPUT Inserted.id";
+    $sql = "INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (:fname, :lname, :email, :pass); SELECT LAST_INSERT_ID()";
     $stmt = $link->prepare($sql);
 
     $stmt->bindParam(":email", $email);
@@ -72,22 +68,38 @@
     $stmt->bindParam(":lname", $lname);
     $stmt->bindParam(":pass", $pass);
 
-    if ($stmt->execute()) {
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Try to insert the user. Send a message that the user exists if there's a problem.
+    try {
 
-        $status["status"] = "success";
+        $stmt->execute();
 
-        if ($result->rowCount() == 1) {
-            foreach ($result as $row) {
-                $status["message"] = array("fname" => $fname, "lname" => $lname, "email" => $email, "uid" => $row["id"]);
-            }
-        }
+    } catch (PDOException $e) {
 
-        die(json_decode($status));
+        $status["status"] = "error";
+        $status["message"] = ENUMS::INSERT_USER_EXISTS;
+
+        die(json_encode($status));
     }
 
+    // Grab the user ID based ont he entry just submitted
+    $stmt = $link->prepare("SELECT ID from users WHERE email = :email");
+    $stmt->bindParam(":email", $email);
+    $stmt->execute();
+
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($stmt->rowCount() == 1) {
+
+        // Return the user's information including the ID
+        $status["status"] = "success";
+        $status["message"] = array("fname" => $fname, "lname" => $lname, "email" => $email, "uid" => $result["ID"]);
+        
+        die(json_encode($status));
+    }
+
+    // Die for any other reason
     $status["status"] = "error";
     $status["message"] = ENUMS::FAILED_NEW_USER;
 
-
+    die(json_encode($status));
 ?>
