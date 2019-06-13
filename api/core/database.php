@@ -7,6 +7,7 @@
         private $pass = "";
 
         public $link;
+        
 
         public function __construct() {
             try {
