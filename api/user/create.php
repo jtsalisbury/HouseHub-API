@@ -53,8 +53,41 @@
         die(json_encode($status));
     }
 
+
+
     // ensure user doesn't exist
     // passowrd hash
     // return status ok
+
+    $email = htmlspecialchars(strip_tags($email));
+    $fname = htmlspecialchars(strip_tags($fname));
+    $lname = htmlspecialchars(strip_tags($lname));
+    $pass  = password_hash(htmlspecialchars(strip_tags($pass)), PASSWORD_BCRYPT);
+
+    $sql = "INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (:fname, :lname, :email, :pass) OUTPUT Inserted.id";
+    $stmt = $link->prepare($sql);
+
+    $stmt->bindParam(":email", $email);
+    $stmt->bindParam(":fname", $fname);
+    $stmt->bindParam(":lname", $lname);
+    $stmt->bindParam(":pass", $pass);
+
+    if ($stmt->execute()) {
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $status["status"] = "success";
+
+        if ($result->rowCount() == 1) {
+            foreach ($result as $row) {
+                $status["message"] = array("fname" => $fname, "lname" => $lname, "email" => $email, "uid" => $row["id"]);
+            }
+        }
+
+        die(json_decode($status));
+    }
+
+    $status["status"] = "error";
+    $status["message"] = ENUMS::FAILED_NEW_USER;
+
 
 ?>
