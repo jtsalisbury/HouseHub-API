@@ -19,7 +19,7 @@
     $pass  = $data->pass;
     $repass = $data->repass;
 
-    $status = array("message" => "", "status" => "");
+    $status = array();
 
 
     /*
@@ -28,7 +28,7 @@
 
     if (empty($fname) || empty($lname) || empty($email) || empty($pass) || empty($repass)) {
         $status["status"] = "error";
-        $status["error_code"] = ENUMS::FIELD_NOT_SET;
+        $status["message"] = ENUMS::FIELD_NOT_SET;
 
         die(json_encode($status));
     }
@@ -39,7 +39,7 @@
 
     if ($pass != $respass) {
         $status["status"] = "error";
-        $status["error_code"] = ENUMS::PASS_NOT_EQUAL;
+        $status["message"] = ENUMS::PASS_NOT_EQUAL;
 
         die(json_encode($status));
     }
@@ -48,7 +48,7 @@
 
     if (!$link) {
         $status["status"] = "error";
-        $status["error_code"] = ENUMS::DB_NOT_CONNECTED;
+        $status["message"] = ENUMS::DB_NOT_CONNECTED;
 
         die(json_encode($status));
     }

@@ -4,7 +4,7 @@
         Includes all enumerations for errors, messages, etc;
     */
 
-    class ENUMS extends SplEnum {
+    class ENUMS {
         const SUCCESS = "success";
 
         const FIELD_NOT_SET = "fields_not_set";
