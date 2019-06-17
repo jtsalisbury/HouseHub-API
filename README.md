@@ -54,6 +54,5 @@ message will equal a JWT with an encrypted payload equal to the following
     "lname": "provided user's last name",
     "email": "provided user's email",
     "uid":   "newly inserted user's ID number"
-    
 }
 ```
