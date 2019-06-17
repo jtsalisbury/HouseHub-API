@@ -2,7 +2,14 @@
 
 In development API for HouseHub.
 
-## User Creation (Registration) API
+1. Creating Tokens(
+2. Verify Request Tokens
+3. Sending Request Tokens
+4. Parse Response Tokens
+
+5. [User Registration API](#user-registration)
+
+##User Registration
 **Request**
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
 
