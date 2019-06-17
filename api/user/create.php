@@ -13,31 +13,23 @@
     $token = $data->token;
 
     if (!$jwt->verifyToken($token)) {
-        $status["status"] = "error";
-        $status["message"] = ENUMS::TOKEN_INVALID;
-
-        die(json_encode($status));
+        output("error", ENUMS::TOKEN_INVALID);
     }
 
-    $data = json_decode($token->decodePayload($token));
+    $data = json_decode($jwt->decodePayload($token));
 
-    $fname = $data["fname"];
-    $lname = $data["lname"];
-    $email = $data["email"];
-    $pass  = $data["pass"];
-    $repass = $data["repass"];
-
-    $status = array();
+    $fname = $data->fname;
+    $lname = $data->lname;
+    $email = $data->email;
+    $pass  = $data->pass;
+    $repass = $data->repass;
 
     /*
         Check to ensure that all fields are set
     */
 
     if (empty($fname) || empty($lname) || empty($email) || empty($pass) || empty($repass)) {
-        $status["status"] = "error";
-        $status["message"] = ENUMS::FIELD_NOT_SET;
-
-        die(json_encode($status));
+        output("error", ENUMS::FIELD_NOT_SET);
     }
 
     /*
@@ -45,19 +37,13 @@
     */
 
     if ($pass != $repass) {
-        $status["status"] = "error";
-        $status["message"] = ENUMS::PASS_NOT_EQUAL;
-
-        die(json_encode($status));
+        output("error", ENUMS::PASS_NOT_EQUAL);
     }
 
     $link = $db->getLink();
 
     if (!$link) {
-        $status["status"] = "error";
-        $status["message"] = ENUMS::DB_NOT_CONNECTED;
-
-        die(json_encode($status));
+        output("error", ENUMS::DB_NOT_CONNECTED);
     }
 
     // Clean all fields
@@ -82,14 +68,11 @@
 
     } catch (PDOException $e) {
 
-        $status["status"] = "error";
-        $status["message"] = ENUMS::INSERT_USER_EXISTS;
-
-        die(json_encode($status));
+        output("error", ENUMS::INSERT_USER_EXISTS);
     }
 
     // Grab the user ID based on the entry just submitted
-    $stmt = $link->prepare("SELECT ID from users WHERE email = :email");
+    $stmt = $link->prepare("SELECT id from users WHERE email = :email");
     $stmt->bindParam(":email", $email);
     $stmt->execute();
 
@@ -102,20 +85,16 @@
             "fname" => $fname, 
             "lname" => $lname, 
             "email" => $email, 
-            "uid" => $result["ID"]
+            "uid" => $result["id"]
         );
 
-        $token = generateToken($data);
+        echo json_encode($data);
 
-        $status["status"] = "success";
-        $status["message"] = $token;
+        $token = $jwt->generateToken($data);
 
-        die(json_encode($status));
+        output("success", $token);
     }
 
     // Die for any other reason
-    $status["status"] = "error";
-    $status["message"] = ENUMS::FAILED_NEW_USER;
-
-    die(json_encode($status));
+    output("error", ENUMS::FAILED_NEW_USER);
 ?>

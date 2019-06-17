@@ -17,4 +17,10 @@
 
     // Used for: global ENUMS
     $ENUMS = new ENUMS();
+
+    function output($status, $message) {
+        $status = array("status" => $status, "message" => $message);
+
+        die(json_encode($status));
+    }
 ?>

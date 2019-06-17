@@ -13,6 +13,8 @@
         const DB_NOT_CONNECTED = "database_not_connected";
         const FAILED_NEW_USER = "failed_insert_user";
         const INSERT_USER_EXISTS = "failed_insert_user_exists";
+
+        const USER_NOT_EXIST = "user_does_not_exist";
     }
 
 ?>
