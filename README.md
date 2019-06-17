@@ -2,8 +2,8 @@
 
 In development API for HouseHub.
 
-## Create API
-** Request **
+## User Creation (Registration) API
+**Request**
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
 
 The requests should be sent as JSON Web Tokens, with payloads base64 url encoded and then encrypted.
@@ -12,7 +12,7 @@ The fields below should be base64url encoded and then encrypted as a payload for
 
 The JWT should be passed as ```token```
 
-** Request Fields **
+**Request Fields**
 The following fields are required when making a request to create a user.
 ```
 {
@@ -24,7 +24,7 @@ The following fields are required when making a request to create a user.
 }
 ```
 
-** Response **
+**Response**
 The following response will be provided as a JSON string.
 
 ```
