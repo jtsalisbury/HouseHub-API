@@ -74,26 +74,15 @@ Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/crea
 The following fields are required in the payload when making a request to create a user.
 ```
 {
-    "fname":"",
-    "lname":"",
-    "email":"",
-    "pass":"",
-    "repass":""
+    "fname":"first name of user",
+    "lname":"last name of user",
+    "email":"email of user",
+    "pass":"password of user (unencrypted)",
+    "repass":"password re-entered of user (unencrypted)"
 }
 ```
 
-**Response**  
-The following response will be provided.
-
-```
-{
-    "status": "",
-    "message": ""
-}
-```
-
-You should first check the content of status for whether it is "success" or "error".
-
+**Response Errors**  
 ```status = "error"```
 message will equal one of the following
 - "invalid_request_token", token request was invalid
@@ -103,8 +92,9 @@ message will equal one of the following
 - "failed_insert_user", general error for failing to insert a user
 - "failed_insert_user_exists", user already exists
 
+**Response Fields**
 ```status = "success"```
-message will equal a JWT with an encrypted payload equal to the following
+message will be a JWT with a payload of the following fields.
 
 ```
 {
