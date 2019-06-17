@@ -5,7 +5,7 @@ In development API for HouseHub.
 1. [Creating Tokens](#creating-tokens)
 2. [Verifying Tokens](#verifying-tokens)
 3. [Sending Request Tokens](#sending-requests)
-4. Parse Response Tokens
+4. [Parse Responses](#parse-responses)
 
 5. [User Registration API](#user-registration)
 
@@ -45,19 +45,33 @@ The JSON object should contain one field "token" (see the following structure).
     "token": "my-JWT-created-token"
 }
 ```
+
+## Parse Responses
+Responses will be sent in the following format.
+```
+{
+    "status": "",
+    "message": ""
+}
+```
+
+The status will be either "error" or "success".
+
+```status = error```: the message will be a human readable error message. See each API for specific messages to handle.
+
+```status = sucess```: the message will be a JWT with the response fields (see each API for specific fields provided) encrypted in the payload.  
+
+To parse the payload:  
+First, ensure the token is valid (see above).  
+Next, separate the header, payload and signature. Then, decrypt the payload using the encryption algorithm and secret.  
+Finally, base 64 url decode the the decrypted string. This will be a string encoded JSON object. To get the JSON object, simply decode it.
   
 ## User Registration
 **Request**  
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
 
-The requests should be sent as JSON Web Tokens, with payloads base64 url encoded and then encrypted.
-Responses to successfull queries will send JSON Web Tokens as messages, with payloads base64 url encoded and then encrypted.
-The fields below should be base64url encoded and then encrypted as a payload for a JSON Web Token (JWT).
-
-The JWT should be passed as ```token```
-
 **Request Fields**  
-The following fields are required when making a request to create a user.
+The following fields are required in the payload when making a request to create a user.
 ```
 {
     "fname":"",
@@ -69,7 +83,7 @@ The following fields are required when making a request to create a user.
 ```
 
 **Response**  
-The following response will be provided as a JSON string.
+The following response will be provided.
 
 ```
 {
