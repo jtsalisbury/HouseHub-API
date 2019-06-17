@@ -2,14 +2,14 @@
 
 In development API for HouseHub.
 
-1. [Creating Tokens](#create-requests)
-2. Verify Request Tokens
-3. Sending Request Tokens
+1. [Creating Tokens](#creating-tokens)
+2. [Verifying Tokens](#verifying-tokens)
+3. [Sending Request Tokens](#sending-requests)
 4. Parse Response Tokens
 
 5. [User Registration API](#user-registration)
 
-## Create Tokens
+## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
 part1.part2.part3
 
@@ -30,6 +30,21 @@ This should be encoded as a JSON string, then base 64 url encoded, then encrypte
 **part3** The signature for the token.
 This contains no information in particular, but rather a verification that the token is valid.  
 This is a concatentation of part1 to part2 with a period, which is then hashed using the algorithm specified in part1 and a key. This is then base 64 url encoded.
+
+## Verifying Tokens
+See the section before this for the general structure of the token.  
+To verify a token is valid, separate parts 1 and 2 (the header and the payload) from the pre-existing signature (part 3).  
+Then, decode the existing signature and concatenate part1 and part2 (with a period delimiter) and verify the pre-existing hash equals the new hash.  
+If they do, then we are golden! If not, something has changed and the token should be discarded.
+
+## Sending Requests
+When making requests to the API, send a POST request with a string encoded JSON object.  
+The JSON object should contain one field "token" (see the following structure).
+```
+{
+    "token": "my-JWT-created-token"
+}
+```
   
 ## User Registration
 **Request**  
