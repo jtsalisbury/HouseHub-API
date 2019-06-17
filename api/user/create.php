@@ -10,11 +10,22 @@
 
     $data = json_decode(file_get_contents("php://input"));
 
-    $fname = $data->fname;
-    $lname = $data->lname;
-    $email = $data->email;
-    $pass  = $data->pass;
-    $repass = $data->repass;
+    $token = $data->token;
+
+    if (!$jwt->verifyToken($token)) {
+        $status["status"] = "error";
+        $status["message"] = ENUMS::TOKEN_INVALID;
+
+        die(json_encode($status));
+    }
+
+    $data = json_decode($token->decodePayload($token));
+
+    $fname = $data["fname"];
+    $lname = $data["lname"];
+    $email = $data["email"];
+    $pass  = $data["pass"];
+    $repass = $data["repass"];
 
     $status = array();
 

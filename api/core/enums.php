@@ -7,6 +7,7 @@
     class ENUMS {
         const SUCCESS = "success";
 
+        const TOKEN_INVALID = "invalid_request_token";
         const FIELD_NOT_SET = "fields_not_set";
         const PASS_NOT_EQUAL = "password_not_equal";
         const DB_NOT_CONNECTED = "database_not_connected";
