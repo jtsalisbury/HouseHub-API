@@ -6,8 +6,8 @@ In development API for HouseHub.
 2. [Verifying Tokens](#verifying-tokens)
 3. [Sending Request Tokens](#sending-requests)
 4. [Parse Responses](#parse-responses)
-
-5. [User Registration API](#user-registration)
+5. [User Registration](#user-registration)
+5. [User Login](#user-login)
 
 ## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
@@ -85,12 +85,12 @@ The following fields are required in the payload when making a request to create
 **Response Errors**  
 ```status = "error"```
 message will equal one of the following
-- "invalid_request_token", token request was invalid
 - "fields_not_set", one or more of the required payload fields was not set 
 - "password_not_equal", the passwords do not match
 - "database_not_connected", internal issue with DB connection
 - "failed_insert_user", general error for failing to insert a user
 - "failed_insert_user_exists", user already exists
+- "invalid_request_token", the token couldn't be validated.
 
 **Response Fields**
 ```status = "success"```
@@ -102,5 +102,42 @@ message will be a JWT with a payload of the following fields.
     "lname": "provided user's last name",
     "email": "provided user's email",
     "uid":   "newly inserted user's ID number"
+}
+```
+
+## User Login
+**Request**  
+Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/login.php
+
+**Request Fields**  
+The following fields are required in the payload when making a request to create a user.
+```
+{
+    "email":"email of user",
+    "pass":"password of user (unencrypted)",
+}
+```
+
+**Response Errors**  
+```status = "error"```
+message will equal one of the following
+- "fields_not_set", one or more of the required payload fields was not set 
+- "password_not_equal", the passwords do not match
+- "database_not_connected", internal issue with DB connection
+- "user_does_not_exist", a user with that email couldn't be found
+- "invalid_request_token", the token couldn't be validated
+
+**Response Fields**
+```status = "success"```
+message will be a JWT with a payload of the following fields.
+
+```
+{
+    "fname": "user's first name",
+    "lname": "user's last name",
+    "email": "user's email",
+    "admin": 0 or 1 (0 = not admin, 1 = admin),
+    "created": datetime user registered
+    "uid":   "user's ID number"
 }
 ```
