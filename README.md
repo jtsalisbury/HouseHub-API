@@ -9,7 +9,7 @@ In development API for HouseHub.
 
 5. [User Registration API](#user-registration)
 
-##User Registration
+## User Registration
 **Request**
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
 
