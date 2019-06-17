@@ -1,15 +1,12 @@
 <?php
 
-    header("Access-Control-Allow-Origin: http://localhost/rest-api-authentication-example/");
+    header("Access-Control-Allow-Origin: http://u747950311.hostingerapp.com/househub/api/");
     header("Content-Type: application/json; charset=UTF-8");
     header("Access-Control-Allow-Methods: POST");
     header("Access-Control-Max-Age: 3600");
     header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-    include_once "../core/database.php";
     include_once "../core/core.php";
-
-    $ENUMS = new ENUMS();
 
     $data = json_decode(file_get_contents("php://input"));
 
@@ -20,7 +17,6 @@
     $repass = $data->repass;
 
     $status = array();
-
 
     /*
         Check to ensure that all fields are set
@@ -44,8 +40,6 @@
         die(json_encode($status));
     }
 
-    $db = new Database();
-
     $link = $db->getLink();
 
     if (!$link) {
@@ -55,12 +49,14 @@
         die(json_encode($status));
     }
 
+    // Clean all fields
     $email = htmlspecialchars(strip_tags($email));
     $fname = htmlspecialchars(strip_tags($fname));
     $lname = htmlspecialchars(strip_tags($lname));
     $pass  = password_hash(htmlspecialchars(strip_tags($pass)), PASSWORD_BCRYPT);
 
-    $sql = "INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (:fname, :lname, :email, :pass); SELECT LAST_INSERT_ID()";
+    // Prepare SQL statement for insertion
+    $sql = "INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (:fname, :lname, :email, :pass)";
     $stmt = $link->prepare($sql);
 
     $stmt->bindParam(":email", $email);
@@ -81,7 +77,7 @@
         die(json_encode($status));
     }
 
-    // Grab the user ID based ont he entry just submitted
+    // Grab the user ID based on the entry just submitted
     $stmt = $link->prepare("SELECT ID from users WHERE email = :email");
     $stmt->bindParam(":email", $email);
     $stmt->execute();
@@ -90,10 +86,19 @@
 
     if ($stmt->rowCount() == 1) {
 
-        // Return the user's information including the ID
+        // Return the user's information including the ID in an encrypted token  
+        $data = array(
+            "fname" => $fname, 
+            "lname" => $lname, 
+            "email" => $email, 
+            "uid" => $result["ID"]
+        );
+
+        $token = generateToken($data);
+
         $status["status"] = "success";
-        $status["message"] = array("fname" => $fname, "lname" => $lname, "email" => $email, "uid" => $result["ID"]);
-        
+        $status["message"] = $token;
+
         die(json_encode($status));
     }
 
