@@ -2,15 +2,37 @@
 
 In development API for HouseHub.
 
-1. Creating Tokens(
+1. [Creating Tokens](#create-requests)
 2. Verify Request Tokens
 3. Sending Request Tokens
 4. Parse Response Tokens
 
 5. [User Registration API](#user-registration)
 
+## Create Tokens
+The tokens follow a simple format. Each part is separated by a period.
+part1.part2.part3
+
+**part1** The header for the token.  
+This contains a JSON string which is base 64 url encoded.  
+The typical structure for this should be
+```
+{
+    "typ": "JWT",
+    "alg": "my-hashing-algorithm",
+}
+```
+  
+**part2** The payload for the token.  
+This contains a string representation of a JSON object with the required fields for that specific API.  
+This should be encoded as a JSON string, then base 64 url encoded, then encrypted using a specific algorithm and secret.  
+  
+**part3** The signature for the token.
+This contains no information in particular, but rather a verification that the token is valid.  
+This is a concatentation of part1 to part2 with a period, which is then hashed using the algorithm specified in part1 and a key. This is then base 64 url encoded.
+  
 ## User Registration
-**Request**
+**Request**  
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
 
 The requests should be sent as JSON Web Tokens, with payloads base64 url encoded and then encrypted.
@@ -19,7 +41,7 @@ The fields below should be base64url encoded and then encrypted as a payload for
 
 The JWT should be passed as ```token```
 
-**Request Fields**
+**Request Fields**  
 The following fields are required when making a request to create a user.
 ```
 {
@@ -31,7 +53,7 @@ The following fields are required when making a request to create a user.
 }
 ```
 
-**Response**
+**Response**  
 The following response will be provided as a JSON string.
 
 ```
