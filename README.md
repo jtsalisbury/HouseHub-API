@@ -8,6 +8,7 @@ In development API for HouseHub.
 4. [Parse Responses](#parse-responses)
 5. [User Registration](#user-registration)
 5. [User Login](#user-login)
+6. [User Information Updating](#user-update)
 
 ## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
@@ -110,7 +111,7 @@ message will be a JWT with a payload of the following fields.
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/login.php
 
 **Request Fields**  
-The following fields are required in the payload when making a request to create a user.
+The following fields are required in the payload when making a request to login a user.
 ```
 {
     "email":"email of user",
@@ -138,6 +139,51 @@ message will be a JWT with a payload of the following fields.
     "email": "user's email",
     "admin": 0 or 1 (0 = not admin, 1 = admin),
     "created": datetime user registered
+    "uid":   "user's ID number"
+}
+```
+
+## User Update
+**Request**  
+Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/update.php
+
+
+**Request Fields**  
+The following fields are required in the payload when making a request to update a user.
+```
+{
+    "uid": acting user's id,
+    "pass": "current user's pass",
+    "fields": { // all fields below are optional (at least one must be specified)
+        "lname": "new last name",
+        "fname": "new first name",
+        "email": "new email",
+        "pass": "new pass", // if you send pass or repass, the other is REQUIRED
+        "repass": "new pass re-entered"
+    }
+}
+```
+
+**Response Errors**  
+```status = "error"```
+message will equal one of the following
+- "fields_not_set", one or more of the required payload fields was not set 
+- "password_not_equal", the current passwords do not match
+- "database_not_connected", internal issue with DB connection
+- "user_does_not_exist", a user with that email couldn't be found
+- "invalid_request_token", the token couldn't be validated
+- "update_user_new_pass_not_equal", the password to be changed is not equal or both pass and repass weren't
+
+
+**Response Fields**
+```status = "success"```
+message will be a JWT with a payload of the following fields.
+
+```
+{
+    "fname": "user's new first name",
+    "lname": "user's new last name",
+    "email": "user's new email",
     "uid":   "user's ID number"
 }
 ```
