@@ -9,9 +9,9 @@
     include_once "../core/core.php";
 
     // Read the token
-    $data = json_decode(file_get_contents("php://input"));
+    $data = json_decode(file_get_contents("php://input"), true);
 
-    $token = $data->token;
+    $token = $data["token"];
 
     // Verify we are receiving an unmodified token from a genuine source
     if (!$jwt->verifyToken($token)) {
@@ -19,10 +19,10 @@
     }
 
     // Decode the payload and grab our parameters
-    $data = json_decode($jwt->decodePayload($token));
+    $data = json_decode($jwt->decodePayload($token), true);
 
-    $email = $data->email;
-    $pass  = $data->pass;
+    $email = $data["email"];
+    $pass  = $data["pass"];
 
     if (empty($email) || empty($pass)) {
         output("error", ENUMS::FIELD_NOT_SET);
