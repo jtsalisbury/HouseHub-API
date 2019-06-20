@@ -5,7 +5,6 @@
     include_once "jwt.php";
     include_once "database.php";
 
-
     // Parse settings and initialize global Jobjects
     $data = parse_ini_file("settings.ini");
 

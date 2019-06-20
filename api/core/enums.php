@@ -15,6 +15,8 @@
         const INSERT_USER_EXISTS = "failed_insert_user_exists";
 
         const USER_NOT_EXIST = "user_does_not_exist";
+        const FIELD_NOT_EXIST = "user_field_does_not_exist";
+        const UPDATE_PASS_NOT_EQUAL = "update_user_new_pass_not_equal";
     }
 
 ?>

@@ -8,21 +8,21 @@
 
     include_once "../core/core.php";
 
-    $data = json_decode(file_get_contents("php://input"));
+    $data = json_decode(file_get_contents("php://input"), true);
 
-    $token = $data->token;
+    $token = $data["token"];
 
     if (!$jwt->verifyToken($token)) {
         output("error", ENUMS::TOKEN_INVALID);
     }
 
-    $data = json_decode($jwt->decodePayload($token));
+    $data = json_decode($jwt->decodePayload($token), true);
 
-    $fname = $data->fname;
-    $lname = $data->lname;
-    $email = $data->email;
-    $pass  = $data->pass;
-    $repass = $data->repass;
+    $fname = $data["fname"];
+    $lname = $data["lname"];
+    $email = $data["email"];
+    $pass  = $data["pass"];
+    $repass = $data["repass"];
 
     /*
         Check to ensure that all fields are set
@@ -87,8 +87,6 @@
             "email" => $email, 
             "uid" => $result["id"]
         );
-
-        echo json_encode($data);
 
         $token = $jwt->generateToken($data);
 
