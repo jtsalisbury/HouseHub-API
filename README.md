@@ -9,7 +9,8 @@ In development API for HouseHub.
 5. [User Registration](#user-registration)
 5. [User Login](#user-login)
 6. [User Information Updating](#user-update)
-7. [Retrieve Listing Information](#get-listing-info)
+7. [Retrieve User Information](#retrieve-user-information)
+8. [Retrieve Listing Information](#get-listing-info)
 
 ## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
@@ -24,11 +25,11 @@ The typical structure for this should be
     "alg": "my-hashing-algorithm",
 }
 ```
-  
+
 **part2** The payload for the token.  
 This contains a string representation of a JSON object with the required fields for that specific API.  
 This should be encoded as a JSON string, then base 64 url encoded, then encrypted using a specific algorithm and secret.  
-  
+
 **part3** The signature for the token.
 This contains no information in particular, but rather a verification that the token is valid.  
 This is a concatentation of part1 to part2 with a period, which is then hashed using the algorithm specified in part1 and a key. This is then base 64 url encoded.
@@ -67,7 +68,7 @@ To parse the payload:
 First, ensure the token is valid (see above).  
 Next, separate the header, payload and signature. Then, decrypt the payload using the encryption algorithm and secret.  
 Finally, base 64 url decode the the decrypted string. This will be a string encoded JSON object. To get the JSON object, simply decode it.
-  
+
 ## User Registration
 **Request**  
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/create.php
@@ -87,7 +88,7 @@ The following fields are required in the payload when making a request to create
 **Response Errors**  
 ```status = "error"```
 message will equal one of the following
-- "fields_not_set", one or more of the required payload fields was not set 
+- "fields_not_set", one or more of the required payload fields was not set
 - "password_not_equal", the passwords do not match
 - "database_not_connected", internal issue with DB connection
 - "failed_insert_user", general error for failing to insert a user
@@ -123,7 +124,7 @@ The following fields are required in the payload when making a request to login 
 **Response Errors**  
 ```status = "error"```
 message will equal one of the following
-- "fields_not_set", one or more of the required payload fields was not set 
+- "fields_not_set", one or more of the required payload fields was not set
 - "password_not_equal", the passwords do not match
 - "database_not_connected", internal issue with DB connection
 - "user_does_not_exist", a user with that email couldn't be found
@@ -168,7 +169,7 @@ The following fields are required in the payload when making a request to update
 **Response Errors**  
 ```status = "error"```
 message will equal one of the following
-- "fields_not_set", one or more of the required payload fields was not set 
+- "fields_not_set", one or more of the required payload fields was not set
 - "password_not_equal", the current passwords do not match
 - "database_not_connected", internal issue with DB connection
 - "user_does_not_exist", a user with that email couldn't be found
@@ -186,6 +187,43 @@ message will be a JWT with a payload of the following fields.
     "lname": "user's new last name",
     "email": "user's new email",
     "uid":   "user's ID number"
+}
+```
+
+## Retreive User information
+**Request**  
+Send POST requests to: http://u747950311.hostingerapp.com/househub/api/user/retrieve.php
+
+
+**Request Fields**  
+The following fields are required in the payload when making a request to retrieve user info.
+```
+{
+    "uid": user's id,
+}
+```
+
+**Response Errors**  
+```status = "error"```
+message will equal one of the following
+- "fields_not_set", one or more of the required payload fields was not set
+- "database_not_connected", internal issue with DB connection
+- "user_does_not_exist", a user with that email couldn't be found
+- "invalid_request_token", the token couldn't be validated
+
+
+**Response Fields**
+```status = "success"```
+message will be a JWT with a payload of the following fields.
+
+```
+{
+    "fname": "user's first name",
+    "lname": "user's last name",
+    "email": "user's email",
+    "admin": whether the user is an admin or not,
+    "created": when the user's account was created,
+    "lastmodified": when the user's account was last modified
 }
 ```
 
@@ -212,6 +250,8 @@ The following fields are all option in the payload when making a request to get 
 ```status = "error"```
 message will equal one of the following
 - "fields_not_set", request for saved listings without a user id
+- "invalid_request_token", the token couldn't be validated
+- "database_not_connected", internal issue with DB connection
 
 
 **Response Fields**
