@@ -29,6 +29,10 @@
 
     // Grab relevant user information from the id
     $link = $db->getLink();
+
+    if (!$link) {
+        output("error", ENUMS::DB_NOT_CONNECTED);
+    }
     
     $sql = "SELECT firstname, lastname, email, created, lastmodified, admin FROM users WHERE id = :id";
     

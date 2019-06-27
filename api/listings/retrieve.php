@@ -82,6 +82,10 @@
     $sql_page_results = $sql . " LIMIT $startFrom, $lcount";
 
     $link = $db->getLink();
+    if (!$link) {
+        output("error", ENUMS::DB_NOT_CONNECTED);
+    }
+
     $stmt = $link->prepare($sql_page_results);
 
     // Bind all parameters
