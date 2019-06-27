@@ -202,7 +202,6 @@ The following fields are all option in the payload when making a request to get 
     "uid": "used to get all listings which a user has created",
     "saved": "this can be set to any value; when set uid is requried. This will get all the listings a user has saved",
     "page": "if you get the first set of listings and there are more than 1 page, you can use this to get the next set, etc."
-    "search_criteria": "will return any listings with text matching based on title, description, location",
     "price_min": "will return any listings with base price greater than or equal to this",
     "price_max": "will return any listings with base price less than or equal to this"
 }
