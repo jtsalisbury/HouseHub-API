@@ -20,7 +20,7 @@
 
     $data = json_decode($jwt->decodePayload($token), true);
 
-    $uid = htmlspecialchars(strip_tags($data["uid"]));
+    $uid = htmlspecialchars(strip_tags($data["uid"])) + 0;
     $pass = htmlspecialchars(strip_tags($data["pass"]));
     $fields = $data["fields"];
 
@@ -120,5 +120,4 @@
     $token = $jwt->generateToken($data);
 
     output("success", $data);
-
 ?>
