@@ -9,7 +9,7 @@ In development API for HouseHub.
 5. [User Registration](#user-registration)
 5. [User Login](#user-login)
 6. [User Information Updating](#user-update)
-7. [Retrieve Listing Information])#get-listing-info)
+7. [Retrieve Listing Information](#get-listing-info)
 
 ## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
