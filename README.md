@@ -187,3 +187,57 @@ message will be a JWT with a payload of the following fields.
     "uid":   "user's ID number"
 }
 ```
+
+## Get Listing Info
+**Request**  
+Send POST requests to: http://u747950311.hostingerapp.com/househub/api/listings/retrieve.php
+
+
+**Request Fields**  
+The following fields are all option in the payload when making a request to get listing info.
+```
+{
+    "pid": "used to get information for one specific listing",
+    "uid": "used to get all listings which a user has created",
+    "saved": "this can be set to any value; when set uid is requried. This will get all the listings a user has saved",
+    "page": "if you get the first set of listings and there are more than 1 page, you can use this to get the next set, etc."
+    "search_criteria": "will return any listings with text matching based on title, description, location",
+    "price_min": "will return any listings with base price greater than or equal to this",
+    "price_max": "will return any listings with base price less than or equal to this"
+}
+```
+
+
+**Response Errors**  
+```status = "error"```
+message will equal one of the following
+- "fields_not_set", request for saved listings without a user id
+
+
+**Response Fields**
+```status = "success"```
+message will be a JWT with a payload of the following fields.
+
+```
+{
+    "page": the current set (page) of listings which is returned,
+    "total_pages": the number of pages based on the total listings matching the criteria and the maximum to be returned at once
+    "listing_count": the the first set of listings found with the parameters passed,
+    "max_listing_count": the total number of possible listings that could possibly be found,
+    "listings": [
+        {
+            "pid": "Listing id number",
+            "title": "Listing title",
+            "desc": "Listing description",
+            "loc": "Listing address",
+            "base_price": "Listings base price",
+            "add_price": "Listing additional price",
+            "creator_uid": "Listing creator",
+            "num_pictures": "Number of pictures associated with this listing"
+        },
+        .
+        .
+        .
+    ]
+}
+```
