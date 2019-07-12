@@ -273,7 +273,9 @@ message will be a JWT with a payload of the following fields.
             "base_price": "Listings base price",
             "add_price": "Listing additional price",
             "creator_uid": "Listing creator",
-            "num_pictures": "Number of pictures associated with this listing"
+            "num_pictures": "Number of pictures associated with this listing",
+            "created": "date listing was created",
+            "modified": "date listing was modified"
         },
         .
         .
