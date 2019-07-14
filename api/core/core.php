@@ -1,6 +1,8 @@
 <?php
     error_reporting(E_ERROR | E_PARSE);
 
+    session_start();
+
     include_once "enums.php";
     include_once "jwt.php";
     include_once "database.php";

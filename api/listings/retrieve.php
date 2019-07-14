@@ -1,5 +1,4 @@
 <?php
-    header("Access-Control-Allow-Origin: http://u747950311.hostingerapp.com/househub/api/");
     header("Content-Type: application/json; charset=UTF-8");
     header("Access-Control-Allow-Methods: POST");
     header("Access-Control-Max-Age: 3600");
@@ -25,14 +24,14 @@
 
     $viewSaved = $data["saved"];
 
-    //$search_criteria = $data["search_criteria"];
+    $search_criteria = $data["search_criteria"];
     $price_min = $data["price_min"];
     $price_max = $data["price_max"];
 
     // Initially escape the fields
     $postID = htmlspecialchars(strip_tags($postID));
     $userID = htmlspecialchars(strip_tags($userID));
-    //$search_criteria = "%" . htmlspecialchars(strip_tags($search_criteria)) . "%";
+    $search_criteria = htmlspecialchars(strip_tags($search_criteria));
     $price_min = htmlspecialchars(strip_tags($price_min));
     $price_max = htmlspecialchars(strip_tags($price_max));
 
@@ -47,29 +46,29 @@
     $startFrom = ($lpage - 1) * $lcount;
 
     // Begin selecting all non-hidden listings
-    $sql = "SELECT * FROM listings WHERE listings.hidden = 0 ";
+    $sql = "SELECT listings.*, users.id, users.firstname, users.lastname FROM listings LEFT JOIN users ON listings.creator_uid = users.id WHERE listings.hidden = 0 ";
 
-    if (!empty($viewSaved) && empty($userID)) {
+    if ($viewSaved === 'true' && empty($userID)) {
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
     // Listing matching to passed fields
     if (!empty($postID)) {
-        $sql .= "WHERE listings.id = :id";
+        $sql .= "AND listings.id = :id";
 
-    } elseif (!empty($viewSaved) && !empty($userID)) {
+    } elseif ($viewSaved === 'true' && !empty($userID)) {
+
         $sql = "SELECT * FROM saved_listings 
                 LEFT JOIN listings ON saved_listings.post_id = listings.id 
                 WHERE saved_listings.user_id = :id";
 
     } elseif (!empty($userID)) {
-        $sql .= "WHERE creator_uid = :id";
-
+        $sql .= "AND creator_uid = :id";
     }
 
     // Apply possible filters
     if (!empty($search_criteria)) {
-        //$sql .= " AND (listings.title LIKE ':search' OR listings.description LIKE ':search' OR listings.location LIKE ':search')";
+        $sql .= " AND (listings.title LIKE :search_t OR listings.description LIKE :search_d OR listings.location LIKE :search_l)";
     }
     if (!empty($price_min)) {
         $sql .= " AND listings.rent_price >= :p_min";
@@ -79,9 +78,10 @@
     }
 
     // Finish constructing the SQL statement
-    $sql_page_results = $sql . " LIMIT $startFrom, $lcount";
+    $sql_page_results = $sql . " ORDER BY listings.id DESC LIMIT $startFrom, $lcount";
 
     $link = $db->getLink();
+
     if (!$link) {
         output("error", ENUMS::DB_NOT_CONNECTED);
     }
@@ -96,7 +96,11 @@
         $stmt->bindParam(":id", $userID);
     }
     if (!empty($search_criteria)) {
-        //$stmt->bindParam(":search", $search_criteria);
+        $s = "%" . $search_criteria . "%";
+
+        $stmt->bindParam(":search_t", $s);
+        $stmt->bindParam(":search_d", $s);
+        $stmt->bindParam(":search_l", $s);
     }
     if (!empty($price_min)) {
         $stmt->bindParam(":p_min", $price_min);
@@ -113,6 +117,8 @@
     $res = $stmt->fetchAll();
     $listing_count = $stmt->rowCount();
 
+    
+
     $data = array("page" => $lpage, "total_pages" => 0, "listing_count" => $listing_count, "max_listing_count" => $lcount, "listings" => array());
     foreach ($res as $row) {
 
@@ -124,7 +130,11 @@
             "base_price" => $row["rent_price"],
             "add_price" => $row["add_price"],
             "creator_uid" => $row["creator_uid"],
-            "num_pictures" => $row["num_pictures"]
+            "num_pictures" => $row["num_pictures"],
+            "created" => $row["created_date"],
+            "modified" => $row["last_modified"],
+            "creator_fname" => $row["firstname"],
+            "creator_lname" => $row["lastname"],
         );
 
         array_push($data["listings"], $info);
@@ -141,7 +151,11 @@
         $stmt->bindParam(":id", $userID);
     }
     if (!empty($search_criteria)) {
-        //$stmt->bindParam(":search", $search_criteria);
+        $s = "%" . $search_criteria . "%";
+
+        $stmt->bindParam(":search_t", $s);
+        $stmt->bindParam(":search_d", $s);
+        $stmt->bindParam(":search_l", $s);
     }
     if (!empty($price_min)) {
         $stmt->bindParam(":p_min", $price_min);
