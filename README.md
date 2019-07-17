@@ -321,6 +321,7 @@ message will equal one of the following
 - "image_too_large", got an image larger than 2MB
 - "error_move_file", for some reason the file couldn't be moved (contact admin)
 - "title_already_exists", only unique titles are allowed
+- "general_insert_error", a general error for something else that went wrong
 
 **Response Fields**
 ```status = "success"```
