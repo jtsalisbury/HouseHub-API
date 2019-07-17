@@ -290,7 +290,7 @@ message will be a JWT with a payload of the following fields.
 }
 ```
 
-### Post Listings
+### Post Listing
 **Request**  
 Send POST requests to: http://u747950311.hostingerapp.com/househub/api/listings/create.php
 
