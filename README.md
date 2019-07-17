@@ -11,6 +11,7 @@ In development API for HouseHub.
 6. [User Information Updating](#user-update)
 7. [Retrieve User Information](#retrieve-user-information)
 8. [Retrieve Listing Information](#get-listing-info)
+9. [Post Listing](#post-listing)
 
 ## Creating Tokens
 The tokens follow a simple format. Each part is separated by a period.
@@ -242,6 +243,7 @@ The following fields are all option in the payload when making a request to get 
     "page": "if you get the first set of listings and there are more than 1 page, you can use this to get the next set, etc."
     "price_min": "will return any listings with base price greater than or equal to this",
     "price_max": "will return any listings with base price less than or equal to this"
+    "search_criteria": "will return any listings where the search criteria is in the title, description, or location"
 }
 ```
 
@@ -275,11 +277,58 @@ message will be a JWT with a payload of the following fields.
             "creator_uid": "Listing creator",
             "num_pictures": "Number of pictures associated with this listing",
             "created": "date listing was created",
-            "modified": "date listing was modified"
+            "modified": "date listing was modified",
+            "creator_fname": "first name of creator",
+            "creator_lname": "last name of creator",
+            "hidden": whether or not this listing is hidden,
+            "first_image_type": image extension for the 0th image in the collection
         },
         .
         .
         .
     ]
+}
+```
+
+### Post Listing
+**Request**  
+Send POST requests to: http://u747950311.hostingerapp.com/househub/api/listings/create.php
+
+
+**Request Fields**  
+The following fields are required in the payload when making a request to retrieve user info. **Files should be sent in an array titled "file"**
+```
+{
+    "uid": creator's id,
+    "title": title for the listing,
+    "desc": description for the listing,
+    "location": address for the listing,
+    "rent_price": base price,
+    "add_price": additional price (optional, default = 0),
+    "hidden": whether the listing is hidden by default (option, default = 0)
+}
+```
+
+**Response Errors**  
+```status = "error"```
+message will equal one of the following
+- "fields_not_set", one or more of the required payload fields was not set
+- "field_incorrect_type", expected a number, got something else
+- "field_postives_only", got a number less than 0
+- "invalid_request_token", the token couldn't be validated
+- "invalid_number_pictures", more than 20 or less than 3 pictures were submitted
+- "invalid_file_type_supplied", expected a jpg,jpeg, or png; got something different
+- "image_too_large", got an image larger than 2MB
+- "error_move_file", for some reason the file couldn't be moved (contact admin)
+- "title_already_exists", only unique titles are allowed
+- "general_insert_error", a general error for something else that went wrong
+
+**Response Fields**
+```status = "success"```
+message will be a JWT with a payload of the following fields.
+
+```
+{
+    "pid": newly inserted id for this listing,
 }
 ```
