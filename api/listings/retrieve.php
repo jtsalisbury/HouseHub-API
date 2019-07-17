@@ -28,6 +28,14 @@
     $price_min = $data["price_min"];
     $price_max = $data["price_max"];
 
+    $showHidden = $data["show_hidden"];
+
+    if ($showHidden === 'true') {
+        $showHidden = "LIKE '%'";
+    } else {
+        $showHidden = " = 0";
+    }
+
     // Initially escape the fields
     $postID = htmlspecialchars(strip_tags($postID));
     $userID = htmlspecialchars(strip_tags($userID));
@@ -46,7 +54,7 @@
     $startFrom = ($lpage - 1) * $lcount;
 
     // Begin selecting all non-hidden listings
-    $sql = "SELECT listings.*, users.id, users.firstname, users.lastname FROM listings LEFT JOIN users ON listings.creator_uid = users.id WHERE listings.hidden = 0 ";
+    $sql = "SELECT listings.*, users.firstname, users.lastname FROM listings LEFT JOIN users ON listings.creator_uid = users.id WHERE listings.hidden " . $showHidden . " ";
 
     if ($viewSaved === 'true' && empty($userID)) {
         output("error", ENUMS::FIELD_NOT_SET);
@@ -77,8 +85,10 @@
         $sql .= " AND listings.rent_price <= :p_max";
     }
 
+    $sql .= " ORDER BY listings.id DESC";
+
     // Finish constructing the SQL statement
-    $sql_page_results = $sql . " ORDER BY listings.id DESC LIMIT $startFrom, $lcount";
+    $sql_page_results = $sql . " LIMIT $startFrom, $lcount";
 
     $link = $db->getLink();
 
@@ -117,9 +127,7 @@
     $res = $stmt->fetchAll();
     $listing_count = $stmt->rowCount();
 
-    
-
-    $data = array("page" => $lpage, "total_pages" => 0, "listing_count" => $listing_count, "max_listing_count" => $lcount, "listings" => array());
+    $data = array("page" => $lpage, "total_listings" => 0, "total_pages" => 0, "listing_count" => $listing_count, "max_listing_count" => $lcount, "listings" => array());
     foreach ($res as $row) {
 
         $info = array(
@@ -135,6 +143,8 @@
             "modified" => $row["last_modified"],
             "creator_fname" => $row["firstname"],
             "creator_lname" => $row["lastname"],
+            "hidden" => $row["hidden"],
+            "first_img_type" => $row["first_img_extension"]
         );
 
         array_push($data["listings"], $info);
@@ -171,6 +181,7 @@
     $total_pages = ceil($total_records / $lcount);
 
     $data["total_pages"] = $total_pages;
+    $data["total_listings"] = $total_records;
 
     // Generate the token and output the result
     $token = $jwt->generateToken($data);

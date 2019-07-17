@@ -8,13 +8,13 @@
     include_once "database.php";
 
     // Parse settings and initialize global Jobjects
-    $data = parse_ini_file("settings.ini");
+    $sec = parse_ini_file("settings.ini");
 
     // Used for: creation, verification and decoding of tokens
-    $jwt = new JWT($data["signKey"], $data["signAlgorithm"], $data["payloadSecret"], $data["payloadCipher"]);
+    $jwt = new JWT($sec["signKey"], $sec["signAlgorithm"], $sec["payloadSecret"], $sec["payloadCipher"]);
     
     // Used for: querying of database
-    $db = new Database($data["host"], $data["db"], $data["user"], $data["pass"]);
+    $db = new Database($sec["host"], $sec["db"], $sec["user"], $sec["pass"]);
 
     // Used for: global ENUMS
     $ENUMS = new ENUMS();
