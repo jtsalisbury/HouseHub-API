@@ -29,9 +29,10 @@
     $price_max = $data["price_max"];
 
     $showHidden = $data["show_hidden"];
+    $requesterid = $data["requesterid"];
 
     if ($showHidden === 'true') {
-        $showHidden = "LIKE '%'";
+        $showHidden = " LIKE '%'";
     } else {
         $showHidden = " = 0";
     }
@@ -42,6 +43,11 @@
     $search_criteria = htmlspecialchars(strip_tags($search_criteria));
     $price_min = htmlspecialchars(strip_tags($price_min));
     $price_max = htmlspecialchars(strip_tags($price_max));
+    $requesterid = htmlspecialchars(strip_tags($requesterid));
+
+    if (empty($requesterid)) {
+        output("error", ENUMS::FIELD_NOT_SET);
+    }
 
     // Calculate which listings we are on
     $lcount = 20;
@@ -54,7 +60,10 @@
     $startFrom = ($lpage - 1) * $lcount;
 
     // Begin selecting all non-hidden listings
-    $sql = "SELECT listings.*, users.firstname, users.lastname FROM listings LEFT JOIN users ON listings.creator_uid = users.id WHERE listings.hidden " . $showHidden . " ";
+    $sql = "SELECT listings.*, users.firstname, users.lastname, IF(s.user_id IS NULL, 0, 1) AS saved FROM listings 
+            LEFT JOIN users ON listings.creator_uid = users.id 
+            LEFT JOIN saved_listings s ON (s.post_id = listings.id AND s.user_id = :reqid)
+            WHERE listings.hidden" . $showHidden . " ";
 
     if ($viewSaved === 'true' && empty($userID)) {
         output("error", ENUMS::FIELD_NOT_SET);
@@ -66,8 +75,9 @@
 
     } elseif ($viewSaved === 'true' && !empty($userID)) {
 
-        $sql = "SELECT * FROM saved_listings 
-                LEFT JOIN listings ON saved_listings.post_id = listings.id 
+        $sql = "SELECT listings.*, users.firstname, users.lastname FROM saved_listings 
+                LEFT JOIN listings ON saved_listings.post_id = listings.id
+                LEFT JOIN users ON saved_listings.user_id = users.id
                 WHERE saved_listings.user_id = :id";
 
     } elseif (!empty($userID)) {
@@ -115,9 +125,11 @@
     if (!empty($price_min)) {
         $stmt->bindParam(":p_min", $price_min);
     }
-
     if (!empty($price_max)) {
         $stmt->bindParam(":p_max", $price_max);
+    }
+    if ($viewSaved !== 'true') {
+        $stmt->bindParam(":reqid", $requesterid);
     }
 
     // Grab all the listings and compile them to an array
@@ -129,6 +141,11 @@
 
     $data = array("page" => $lpage, "total_listings" => 0, "total_pages" => 0, "listing_count" => $listing_count, "max_listing_count" => $lcount, "listings" => array());
     foreach ($res as $row) {
+
+        $images = array();
+        foreach (glob("../images/" . $row["id"] . "/*.*") as $file) {
+            array_push($images, end((explode("/", $file))));
+        }  
 
         $info = array(
             "pid" => $row["id"],
@@ -144,7 +161,8 @@
             "creator_fname" => $row["firstname"],
             "creator_lname" => $row["lastname"],
             "hidden" => $row["hidden"],
-            "first_img_type" => $row["first_img_extension"]
+            "saved" => $row["saved"],
+            "images" => $images
         );
 
         array_push($data["listings"], $info);
@@ -156,7 +174,6 @@
     if (!empty($postID)) {
         $stmt->bindParam(":id", $postID);
     }
-
     if (!empty($userID)) {
         $stmt->bindParam(":id", $userID);
     }
@@ -170,10 +187,13 @@
     if (!empty($price_min)) {
         $stmt->bindParam(":p_min", $price_min);
     }
-
     if (!empty($price_max)) {
         $stmt->bindParam(":p_max", $price_max);
     }
+    if ($viewSaved !== 'true') {
+        $stmt->bindParam(":reqid", $requesterid);
+    }
+
     $stmt->execute();
     
     // Using the results, calculate the total pages

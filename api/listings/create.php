@@ -15,8 +15,8 @@
     $desc   = $data["desc"];
     $location = $data["location"];
     $price  = $data["rent_price"];
-    $add_price = $data["add_price"] or 0;
-    $hidden = $data["hidden"] or 0;
+    $add_price = is_numeric($data["add_price"]) ? $data["add_price"] : 0;
+    $hidden = is_numeric($data["hidden"]) ? $data["hidden"] : 0;
 
     $pics   = $_FILES["file"];
 
@@ -27,7 +27,7 @@
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
-    if (!is_numeric($price) || !is_numeric($add_price) || !is_numeric($hidden) || !is_numeric($num_pics)) {
+    if (!is_numeric($price) || !is_numeric($add_price) || !is_numeric($hidden)) {
         output("error", ENUMS::FIELD_TYPE_WRONG);
     }
 
@@ -69,15 +69,15 @@
     $hidden = htmlspecialchars(strip_tags($hidden));
 
     // Insert the new listing
-    $sql = "INSERT INTO listings (title, description, location, rent_price, add_price, creator_uid, hidden, num_pictures, first_img_extension) VALUES (:title, :desc, :loc, :price, :add_price, :creator, :hidden, :pics, :ext)";
+    $sql = "INSERT INTO listings (title, description, location, rent_price, add_price, creator_uid, hidden, num_pictures) VALUES (:title, :desc, :loc, :price, :add_price, :creator, :hidden, :pics)";
 
     $link = $db->getLink();
 
+    if (!$link) {
+        output("error", ENUMS::DB_NOT_CONNECTED);
+    }
+
     $stmt = $link->prepare($sql);
-
-
-    $name = $_FILES["file"]["name"][0];
-    $extension = end((explode(".", $name)));
 
     $stmt->bindParam(":title", $title);
     $stmt->bindParam(":desc", $desc);
@@ -87,7 +87,6 @@
     $stmt->bindParam(":creator", $userID);
     $stmt->bindParam(":hidden", $hidden);
     $stmt->bindParam(":pics", $num_pics);
-    $stmt->bindParam(":ext", $extension);
 
     try {
         $stmt->execute();
@@ -110,7 +109,7 @@
     // Assuming we are good, we should return the pid and move all the files to the correct location
     if ($stmt->rowCount() == 1) {
 
-        $pid = $result["id"]
+        $pid = $result["id"];
 
         // Handle image uploading
         for ($i = 0; $i < $num_pics; $i++) {
