@@ -280,6 +280,7 @@ message will be a JWT with a payload of the following fields.
             "modified": "date listing was modified",
             "creator_fname": "first name of creator",
             "creator_lname": "last name of creator",
+            "creator_email": "email of creator",
             "hidden": whether or not this listing is hidden,
             "images": {0.xxx, 1.xxx, ...} an array of the images and their types associated with this listing
         },
