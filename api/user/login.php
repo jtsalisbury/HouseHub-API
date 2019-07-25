@@ -25,7 +25,6 @@
     $pass  = $data["pass"];
 
 
-
     if (empty($email) || empty($pass)) {
         output("error", ENUMS::FIELD_NOT_SET);
     }

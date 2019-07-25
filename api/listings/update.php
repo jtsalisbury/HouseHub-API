@@ -1,7 +1,7 @@
 <?php
     include_once "../core/core.php";
 
-    $token = $_POST["token"];
+     $token = $_POST["token"];
 
     if (!$jwt->verifyToken($token)) {
         output("error", ENUMS::TOKEN_INVALID);
@@ -17,13 +17,14 @@
     $price  = $data["rent_price"];
     $add_price = is_numeric($data["add_price"]) ? $data["add_price"] : 0;
     $hidden = is_numeric($data["hidden"]) ? $data["hidden"] : 0;
+    $pid    = $data["pid"];
 
     $pics   = $_FILES["file"];
 
     // Begin checking and ensuring each field is valid
     $num_pics = count($_FILES["file"]["name"]);
     
-    if (empty($userID) || empty($title) || empty($desc) || empty($location) || empty($price) || $num_pics == 0) {
+    if (empty($userID) || empty($title) || empty($desc) || empty($location) || empty($price) || empty($pid)) {
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
@@ -39,7 +40,7 @@
         output("error", ENUMS::FIELD_TYPE_WRONG);
     }
 
-    if ($num_pics < 3 || $num_pics > 20) {
+    if ($num_pics > 0 && ($num_pics < 3 || $num_pics > 20)) {
         output("error", ENUMS::INVALID_NUM_IMAGES);
     }
 
@@ -67,6 +68,7 @@
     $price  = htmlspecialchars(strip_tags($price));
     $add_p  = htmlspecialchars(strip_tags($add_price));
     $hidden = htmlspecialchars(strip_tags($hidden));
+    $pid    = htmlspecialchars(strip_tags($pid));
 
     $url = "https://maps.googleapis.com/maps/api/distancematrix/json";
     /*$req = array(
@@ -77,7 +79,12 @@
     );*/
 
     // Insert the new listing
-    $sql = "INSERT INTO listings (title, description, location, rent_price, add_price, creator_uid, hidden, num_pictures) VALUES (:title, :desc, :loc, :price, :add_price, :creator, :hidden, :pics)";
+    $sql = "UPDATE listings SET title = :title, description = :desc, location = :loc, rent_price = :price, add_price = :add_price, hidden = :hidden";
+    if ($num_pics > 0) {
+        $sql .= ", num_pictures = :pics";
+    }
+
+    $sql .= " WHERE id = :pid";
 
     $link = $db->getLink();
 
@@ -92,9 +99,11 @@
     $stmt->bindParam(":loc", $loc);
     $stmt->bindParam(":price", $price);
     $stmt->bindParam(":add_price", $add_p);
-    $stmt->bindParam(":creator", $userID);
     $stmt->bindParam(":hidden", $hidden);
-    $stmt->bindParam(":pics", $num_pics);
+    $stmt->bindParam(":pid", $pid);
+    if ($num_pics > 0) {
+        $stmt->bindParam(":pics", $num_pics);
+    }
 
     try {
         $stmt->execute();
@@ -103,21 +112,20 @@
     }
 
     // Grab the post id for the new listing
-    $sql = "SELECT id FROM listings WHERE title = :title AND description = :desc AND creator_uid = :uid";
+  
+    if ($num_pics > 0) {
+        $dir = "../images/" . $pid . "/";
 
-    $stmt = $link->prepare($sql);
-    $stmt->bindParam(":title", $title);
-    $stmt->bindParam(":desc", $desc);
-    $stmt->bindParam(":uid", $userID);
-
-    $stmt->execute();
-
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // Assuming we are good, we should return the pid and move all the files to the correct location
-    if ($stmt->rowCount() == 1) {
-
-        $pid = $result["id"];
+        $objects = scandir($dir);
+        foreach ($objects as $object) {
+          if ($object != "." && $object != "..") {
+            if (filetype($dir."/".$object) == "dir") 
+               rrmdir($dir."/".$object); 
+            else unlink   ($dir."/".$object);
+          }
+        }
+        reset($objects);
+        rmdir($dir);
 
         // Handle image uploading
         for ($i = 0; $i < $num_pics; $i++) {
@@ -127,28 +135,24 @@
             if ($tmpPath != "") {
 
                 // Images are saved to /api/images/pid/i.xxx
-                mkdir("../images/" . $pid . "/");
+                mkdir($dir);
 
                 $ext = end((explode(".", $name)));
 
-                $newPath = "../images/" . $pid . "/" . ($i) . "." . $ext;
+                $newPath = $dir . ($i) . "." . $ext;
 
                 if (!move_uploaded_file($tmpPath, $newPath)) {
                     output("error", ENUMS::FILE_MOVE_ERROR);
                 }
             }
-        }
-
-        // Return the user's information including the ID in an encrypted token  
-        $data = array(
-            "pid" => $pid
-        );
-
-        $token = $jwt->generateToken($data);
-
-        output("success", $token);
+        }       
     }
 
-    // Die for any other reason
-    output("error", ENUMS::GENERAL_INSERT_ERROR);
+    $data = array(
+        "pid" => $pid
+    );
+
+    $token = $jwt->generateToken($data);
+
+    output("success", $token);
 ?>

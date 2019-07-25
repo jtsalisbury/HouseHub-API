@@ -8,116 +8,94 @@
 
     include_once "../core/core.php";
 
-    // Read the token
     $data = json_decode(file_get_contents("php://input"), true);
 
     $token = $data["token"];
 
-    // Verify the token
     if (!$jwt->verifyToken($token)) {
         output("error", ENUMS::TOKEN_INVALID);
     }
 
     $data = json_decode($jwt->decodePayload($token), true);
 
-    $uid = htmlspecialchars(strip_tags($data["uid"])) + 0;
-    $pass = htmlspecialchars(strip_tags($data["pass"]));
-    $fields = $data["fields"];
+    $fname = $data["fname"];
+    $lname = $data["lname"];
+    $email = $data["email"];
+    $pass  = $data["pass"];
+    $repass = $data["repass"];
+    $curpass = $data["curpass"];
+    $uid = $data["uid"];
 
-    // Ensure all the fields are set 
-    if (empty($uid) || empty($pass) || empty($fields)) {
+    $link = $db->getLink();
+
+    if (!$link) {
+        output("error", ENUMS::DB_NOT_CONNECTED);
+    }
+
+    // Clean all fields
+    $email = htmlspecialchars(strip_tags($email));
+    $fname = htmlspecialchars(strip_tags($fname));
+    $lname = htmlspecialchars(strip_tags($lname));
+    $curpass = htmlspecialchars(strip_tags($curpass));
+    $repass  = htmlspecialchars(strip_tags($repass));
+    $pass  = htmlspecialchars(strip_tags($pass));
+    $uid   = htmlspecialchars(strip_tags($uid));
+
+    /*
+        Check to ensure that all fields are set
+    */
+
+    if (empty($fname) || empty($lname) || empty($email) || empty($curpass) || empty($uid)) {
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
-    $availableFields = array(
-        "fname" => false,
-        "lname" => false,
-        "email" => false,
-        "pass"  => false,
-        "repass" => false
-    );
+    /*
+        CHeck to ensure passwords are equal
+    */
 
-    // Loop through each of the passed fields
-    // Check its validity
-    // If the field exists, clean it and map the value to the available field
-    foreach ($fields as $field => $value) {
-        if (!isset($availableFields[$field])) {
-            output("error", ENUMS::FIELD_NOT_EXIST);
-        }
-
-        $fields->$field = htmlspecialchars(strip_tags($value));
-        $availableFields[$field] = $fields[$field];
-    }
-
-    // Special cases to ensure the passwords are set and equal
-    if (!empty($fields["pass"]) && empty($fields["repass"])) {
+    if ($pass != $repass) {
         output("error", ENUMS::UPDATE_PASS_NOT_EQUAL);
     }
 
-    if (!empty($fields["repass"]) && empty($fields["pass"])) {
-        output("error", ENUMS::UPDATE_PASS_NOT_EQUAL);
-    }
 
-    if ($fields["pass"] != $fields["repass"]) {
-        output("error", ENUMS::UPDATE_PASS_NOT_EQUAL);
-    }
-
-    // Get the database link and select the current information for the user
-    $link = $db->getLink();
-
-    $stmt = $link->prepare("SELECT * FROM `users` WHERE id = :id");
+    $sql = "SELECT * FROM users WHERE id = :id";
+    $stmt = $link->prepare($sql);
     $stmt->bindParam(":id", $uid);
+
     $stmt->execute();
 
     $res = $stmt->fetch(PDO::FETCH_ASSOC);
+    $realPass = $res["hashed_pass"];
 
-    if ($stmt->rowCount() == 0) {
-        output("error", ENUMS::USER_NOT_EXIST);
-    }
-
-    // Ensure the password is equal (user must provide password to change data)
-    $hashedPass = $res["hashed_pass"];
-    if (!password_verify($pass, $hashedPass)) {
+    if (!password_verify($curpass, $realPass)) {
         output("error", ENUMS::PASS_NOT_EQUAL);
     }
+    
+    // Prepare SQL statement for insertion
+    $sql = "UPDATE users SET firstname = :fname, lastname = :lname, email = :email";
 
-    // We assume each field was passed (to be changed)
-    $setFields = array(
-        "firstname" => $availableFields["fname"],
-        "lastname" => $availableFields["lname"],
-        "email" => $availableFields["email"],
-        "hashed_pass" => $availableFields["pass"]
-    );
-
-    // If the password is to be changed generate a new one
-    if ($setFields["hashed_pass"]) {
-        $setFields["hashed_pass"] = password_hash($setFields["hashed_pass"], PASSWORD_BCRYPT);
+    if (!empty($pass)) {
+        $sql .= ", hashed_pass = :pass";
     }
 
-    $stmt = $link->prepare("UPDATE `users` SET firstname = :firstname, lastname =:lastname, email=:email, hashed_pass=:hashed_pass WHERE id = :uid; SELECT * FROM  `users` WHERE id = :uid;");
+    $sql .= " WHERE id = :uid";
 
-    // Prepare the query. If we didn't get passed a value for a field, use the current one
-    foreach ($setFields as $key => $val) {
-        if (!$val) {
-            $setFields[$key] = $res[$key];
-        }
+    $stmt = $link->prepare($sql);
 
-        $stmt->bindParam(":" . $key, $setFields[$key]);
+    $stmt->bindParam(":email", $email);
+    $stmt->bindParam(":fname", $fname);
+    $stmt->bindParam(":lname", $lname);
+    $stmt->bindParam(":uid", $uid);
+    
+    if (!empty($pass)) {
+        $stmt->bindParam(":pass", password_hash($pass, PASSWORD_BCRYPT));
     }
 
-    // Bind the UID and send it!
-    $stmt->bindParam("uid", $uid);
     $stmt->execute();
 
-    // Generate the response token
-    $data = array(
-        "fname" => $setFields["firstname"], 
-        "lname" => $setFields["lastname"], 
-        "email" => $setFields["email"], 
-        "uid" => $uid
-    );
-
+    $data = array("uid" => $uid);
     $token = $jwt->generateToken($data);
 
-    output("success", $data);
+    output("success", $token);
+    
 ?>

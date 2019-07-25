@@ -34,7 +34,10 @@
         output("error", ENUMS::DB_NOT_CONNECTED);
     }
     
-    $sql = "SELECT firstname, lastname, email, created, lastmodified, admin FROM users WHERE id = :id";
+    $sql = "SELECT firstname, lastname, email, created, lastmodified, admin, COUNT(listings.id) AS num_listings 
+            FROM users 
+            LEFT JOIN listings ON listings.creator_uid = users.id
+            WHERE users.id = :id";
     
     $stmt = $link->prepare($sql);
     $stmt->bindParam(":id", $uid); 
@@ -54,10 +57,11 @@
         "email" => $res["email"],
         "admin" => $res["admin"],
         "created" => $res["created"],
-        "modified" => $res["lastmodified"]
+        "modified" => $res["lastmodified"],
+        "num_listings" => $res["num_listings"]
     );
 
-    $token = $jwt->generateToken($data);
+    $token = $jwt->generateToken($arr);
 
-    output("success", $data);
+    output("success", $token);
 ?>

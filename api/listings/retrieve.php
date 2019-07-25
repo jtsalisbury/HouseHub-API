@@ -31,12 +31,6 @@
     $showHidden = $data["show_hidden"];
     $requesterid = $data["requesterid"];
 
-    if ($showHidden === 'true') {
-        $showHidden = " LIKE '%'";
-    } else {
-        $showHidden = " = 0";
-    }
-
     // Initially escape the fields
     $postID = htmlspecialchars(strip_tags($postID));
     $userID = htmlspecialchars(strip_tags($userID));
@@ -44,6 +38,12 @@
     $price_min = htmlspecialchars(strip_tags($price_min));
     $price_max = htmlspecialchars(strip_tags($price_max));
     $requesterid = htmlspecialchars(strip_tags($requesterid));
+
+    if ($showHidden === 'true' || !empty($postID)) {
+        $showHidden = " LIKE '%'";
+    } else {
+        $showHidden = " = 0";
+    }
 
     if (empty($requesterid)) {
         output("error", ENUMS::FIELD_NOT_SET);
@@ -60,7 +60,7 @@
     $startFrom = ($lpage - 1) * $lcount;
 
     // Begin selecting all non-hidden listings
-    $sql = "SELECT listings.*, users.firstname, users.lastname, IF(s.user_id IS NULL, 0, 1) AS saved FROM listings 
+    $sql = "SELECT listings.*, users.firstname, users.lastname, users.email, IF(s.user_id IS NULL, 0, 1) AS saved FROM listings 
             LEFT JOIN users ON listings.creator_uid = users.id 
             LEFT JOIN saved_listings s ON (s.post_id = listings.id AND s.user_id = :reqid)
             WHERE listings.hidden" . $showHidden . " ";
@@ -75,7 +75,7 @@
 
     } elseif ($viewSaved === 'true' && !empty($userID)) {
 
-        $sql = "SELECT listings.*, users.firstname, users.lastname FROM saved_listings 
+        $sql = "SELECT listings.*, users.firstname, users.lastname, users.email FROM saved_listings 
                 LEFT JOIN listings ON saved_listings.post_id = listings.id
                 LEFT JOIN users ON saved_listings.user_id = users.id
                 WHERE saved_listings.user_id = :id";
@@ -160,6 +160,7 @@
             "modified" => $row["last_modified"],
             "creator_fname" => $row["firstname"],
             "creator_lname" => $row["lastname"],
+            "creator_email" => $row["email"],
             "hidden" => $row["hidden"],
             "saved" => $row["saved"],
             "images" => $images
