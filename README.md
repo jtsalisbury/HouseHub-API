@@ -243,7 +243,8 @@ The following fields are all option in the payload when making a request to get 
     "page": "if you get the first set of listings and there are more than 1 page, you can use this to get the next set, etc."
     "price_min": "will return any listings with base price greater than or equal to this",
     "price_max": "will return any listings with base price less than or equal to this"
-    "search_criteria": "will return any listings where the search criteria is in the title, description, or location"
+    "search_criteria": "will return any listings where the search criteria is in the title, description, or location",
+    "requesterid": "user ID who is logged in"
 }
 ```
 
