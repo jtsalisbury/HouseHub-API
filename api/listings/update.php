@@ -15,7 +15,7 @@
     $desc   = $data["desc"];
     $location = $data["location"];
     $price  = $data["rent_price"];
-    $add_price = is_numeric($data["add_price"]) ? $data["add_price"] : 0;
+    $add_price = $data["add_price"];
     $hidden = is_numeric($data["hidden"]) ? $data["hidden"] : 0;
     $pid    = $data["pid"];
 
@@ -28,11 +28,11 @@
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
-    if (!is_numeric($price) || !is_numeric($add_price) || !is_numeric($hidden)) {
+    if (!is_numeric($price) || !is_numeric($hidden)) {
         output("error", ENUMS::FIELD_TYPE_WRONG);
     }
 
-    if ($price < 0 || $add_price < 0) {
+    if ($price < 0) {
         output("error", ENUMS::FIELD_TYPE_POSITIVE);
     }
 
@@ -69,14 +69,6 @@
     $add_p  = htmlspecialchars(strip_tags($add_price));
     $hidden = htmlspecialchars(strip_tags($hidden));
     $pid    = htmlspecialchars(strip_tags($pid));
-
-    $url = "https://maps.googleapis.com/maps/api/distancematrix/json";
-    /*$req = array(
-        "origins" => $loc,
-        "destination" => "",
-        "key" => "AIzaSyDrqRMlAyg4AfgxS26_LFJVd_h2ZgXjAdA",
-        "units" => "imperial"
-    );*/
 
     // Insert the new listing
     $sql = "UPDATE listings SET title = :title, description = :desc, location = :loc, rent_price = :price, add_price = :add_price, hidden = :hidden";

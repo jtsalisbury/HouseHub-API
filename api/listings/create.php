@@ -15,7 +15,7 @@
     $desc   = $data["desc"];
     $location = $data["location"];
     $price  = $data["rent_price"];
-    $add_price = is_numeric($data["add_price"]) ? $data["add_price"] : 0;
+    $add_price = $data["add_price"];
     $hidden = is_numeric($data["hidden"]) ? $data["hidden"] : 0;
 
     $pics   = $_FILES["file"];
@@ -27,11 +27,11 @@
         output("error", ENUMS::FIELD_NOT_SET);
     }
 
-    if (!is_numeric($price) || !is_numeric($add_price) || !is_numeric($hidden)) {
+    if (!is_numeric($price) || !is_numeric($hidden)) {
         output("error", ENUMS::FIELD_TYPE_WRONG);
     }
 
-    if ($price < 0 || $add_price < 0) {
+    if ($price < 0) {
         output("error", ENUMS::FIELD_TYPE_POSITIVE);
     }
 
@@ -68,13 +68,16 @@
     $add_p  = htmlspecialchars(strip_tags($add_price));
     $hidden = htmlspecialchars(strip_tags($hidden));
 
-    $url = "https://maps.googleapis.com/maps/api/distancematrix/json";
-    /*$req = array(
-        "origins" => $loc,
-        "destination" => "",
-        "key" => "AIzaSyDrqRMlAyg4AfgxS26_LFJVd_h2ZgXjAdA",
-        "units" => "imperial"
-    );*/
+    /*$url = "https://maps.googleapis.com/maps/api/distancematrix/json";
+    $params = "?origins=" . $loc . "&destination=2600 Clifton Ave, Cincinnati, OH 45221&units=imperial&key=AIzaSyDrqRMlAyg4AfgxS26_LFJVd_h2ZgXjAdA";
+
+    $ch = curl_init(urlencode($url . $params));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $res = curl_exec($ch);
+    curl_close($ch);
+
+    output("error", $res);*/
 
     // Insert the new listing
     $sql = "INSERT INTO listings (title, description, location, rent_price, add_price, creator_uid, hidden, num_pictures) VALUES (:title, :desc, :loc, :price, :add_price, :creator, :hidden, :pics)";
